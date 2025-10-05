@@ -1,0 +1,116 @@
+﻿# =============================================================================
+# Requirements for Continuous-Time RL for Asset-Liability Management
+# Paper: Huang, Y. (2025). ICAIF 2025. arXiv:2509.23280
+# Implementation Version: 1.0.0
+# Python Version: >=3.9,<3.13
+# =============================================================================
+
+# --- Core Numerical Computing ---
+# NumPy: Array operations, linear algebra, random number generation for SDE simulation
+numpy==1.26.4
+
+# Pandas: DataFrame operations, results aggregation, statistical analysis
+pandas==2.2.2
+
+# SciPy: Quasi-Monte Carlo (Sobol sequences), non-parametric tests (Wilcoxon)
+scipy==1.13.1
+
+# --- Reinforcement Learning Environment ---
+# Gymnasium: Standardized RL environment interface (Gym successor)
+gymnasium==0.29.1
+
+# --- Deep Learning Framework ---
+# PyTorch: Neural networks for SAC/PPO/DDPG baselines, automatic differentiation
+# NOTE: Choose ONE of the following based on your hardware:
+
+# For CPU-only environments:
+torch==2.3.1
+
+# For CUDA 11.8 (NVIDIA GPU) environments, replace above with:
+# torch==2.3.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+
+# For CUDA 12.1 (NVIDIA GPU) environments, replace above with:
+# torch==2.3.1+cu121 --index-url https://download.pytorch.org/whl/cu121
+
+# --- Visualization ---
+# Matplotlib: Publication-quality figures, learning curves, statistical plots
+matplotlib==3.9.0
+
+# Seaborn: Statistical heatmaps, enhanced aesthetics for scientific visualization
+seaborn==0.13.2
+
+# --- Progress Monitoring ---
+# tqdm: Progress bars for 200+ independent simulation runs
+tqdm==4.66.4
+
+# --- Optional: Type Checking (Development) ---
+# Uncomment for static type analysis during development
+# mypy==1.10.0
+
+# --- Optional: Code Formatting (Development) ---
+# Uncomment for PEP-8 compliance verification
+# black==24.4.2
+# flake8==7.0.0
+# isort==5.13.2
+
+# =============================================================================
+# Installation Instructions
+# =============================================================================
+#
+# Standard installation (CPU):
+#   pip install -r requirements.txt
+#
+# GPU installation (CUDA 11.8):
+#   1. Comment out the CPU torch line above
+#   2. Uncomment the CUDA 11.8 torch line
+#   3. pip install -r requirements.txt
+#
+# Verification:
+#   python -c "import numpy, pandas, scipy, gymnasium, torch, matplotlib, seaborn, tqdm; print('All dependencies loaded successfully')"
+#
+# Environment isolation (STRONGLY RECOMMENDED):
+#   python -m venv venv_almrl
+#   source venv_almrl/bin/activate  # On Windows: venv_almrl\Scripts\activate
+#   pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# =============================================================================
+# Version Rationale
+# =============================================================================
+#
+# NumPy 1.26.4:
+#   - Stable release with mature random generation API (np.random.Generator)
+#   - Required for reproducible Sobol/Normal sampling
+#   - Compatible with SciPy 1.13.x
+#
+# Pandas 2.2.2:
+#   - Performance improvements for large result datasets (200 runs × 20000 steps)
+#   - Enhanced dtype handling
+#
+# SciPy 1.13.1:
+#   - qmc.Sobol for low-discrepancy parameter sampling
+#   - stats.wilcoxon for paired non-parametric significance testing
+#
+# Gymnasium 0.29.1:
+#   - Latest stable API
+#   - Improved type hints matching our implementation
+#   - gym.Env base class for ALMEnvironment
+#
+# PyTorch 2.3.1:
+#   - torch.distributions.Normal for SAC stochastic policies
+#   - Stable autograd for policy gradient computation
+#   - Efficient GPU utilization for baseline agents
+#
+# Matplotlib 3.9.0:
+#   - Subplot layout improvements for multi-panel figures
+#   - Enhanced PDF export quality
+#
+# Seaborn 0.13.2:
+#   - Modern heatmap styling for p-value matrix
+#   - Improved color palette support
+#
+# tqdm 4.66.4:
+#   - Nested progress bars for outer (run) and inner (episode) loops
+#   - Minimal overhead on compute-intensive simulations
+#
+# =============================================================================
