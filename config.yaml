@@ -1,0 +1,269 @@
+﻿# ==============================================================================#
+#
+#  Configuration File for the Reproduction of:
+#  "Continuous-Time Reinforcement Learning for Asset-Liability Management"
+#
+#  This file contains all necessary parameters to execute the full experimental
+#  pipeline, including metadata, simulation settings, agent hyperparameters,
+#  and evaluation criteria. It serves as the single source of truth for the
+#  `main` execution script.
+#
+# ==============================================================================#
+
+# =========================
+# 1) EXPERIMENT METADATA
+# =========================
+EXPERIMENT_META:
+  experiment_name: "alm_rl_reproduction_v1"
+  description: "Continuous-time RL for ALM vs. baselines across 200 randomized market scenarios."
+  num_independent_runs: 200
+  num_episodes_per_run: 20000
+  rng_policy:
+    master_seed: 42
+    rng_impl: "numpy.random.PCG64"
+    seed_domain: [0, 2147483647] # 2**31 - 1
+    derivation_note: >
+      Per-run base_seed is deterministically derived from master_seed;
+      per-algorithm seeds are deterministically derived from base_seed to isolate stochastic streams.
+
+# ==================================
+# 2) TIME GRID AND PENALTY SETTINGS
+# ==================================
+TIME_AND_PENALTIES:
+  T: 1.0
+  delta_t: 0.01
+  K: 100
+  Q: 1.0
+  H: 1.0
+  reward_definition:
+    interim: "r_k = -0.5 * Q * x_k^2 * delta_t"
+    terminal: "r_T += -0.5 * H * x_T^2"
+    per_episode: "R = sum_{k=0}^{K-1} (-0.5 * Q * x_k^2 * delta_t) + (-0.5 * H * x_K^2)"
+
+# ===============================
+# 3) ALM-RL (PROPOSED) SETTINGS
+# ===============================
+ALM_RL_CONFIG:
+  sde_form: "dx = (A x + B u) dt + (C x + D u) dW"
+  schedules:
+    learning_rate:
+      form: "power_law"
+      formula: "a_n = (n + 1)**(-0.75)"
+      a0: 1.0
+      exponent: -0.75
+      convergence_conditions: "sum a_n = inf, sum a_n^2 < inf"
+    exploration_schedule:
+      form: "power_law"
+      formula: "b_n = (n + 1)**(0.25)"
+      b0: 1.0
+      exponent: 0.25
+    temperature:
+      formula: "gamma_n = c_gamma / b_n"
+      c_gamma: 1.0
+  projection_bounds:
+    theta_max: 100.0
+    phi1_max: 100.0
+    phi2_min: 0.01
+    phi2_max: 100.0
+  critic_parameterization:
+    form: "J(t, x; theta) = -0.5 * k1(t; theta) * x**2 + k3(t; theta)"
+    k1_form: "constant"
+    k3_form: "constant"
+    d: 2
+    notes: "Minimal form consistent with the theory; richer k1,k3 are allowed but not required."
+  policy_parameterization:
+    form: "pi(u|x; phi) = Normal(mean=phi1 * x, variance=phi2)"
+    parameters: ["phi1", "phi2"]
+  initialization:
+    x0: 0.0
+    theta_dist: "Normal(0,1)"
+    phi1_dist: "Normal(0,1)"
+    phi2_value: 1.0
+
+# ====================================
+# 4) TRADITIONAL / MODEL-BASED BASELINES
+# ====================================
+BASELINES_CONFIG:
+  dcppi:
+    policy_form: "u = -m * x"
+    m_initial_dist: "Normal(0,1)"
+    learning_rate:
+      form: "power_law"
+      formula: "a_n = (n + 1)**(-0.75)"
+      a0: 1.0
+      exponent: -0.75
+    update_rule_note: >
+      m_{n+1} = m_n + a_n * sign(sum_i sign(x_i * x_{i+1}));
+      sign-consistency score used to adapt m.
+  acs:
+    policy_form: "u = -m * sgn(x) * max(|x| - delta, 0)"
+    m_initial_dist: "Normal(0,1)"
+    tolerance_delta: 0.1
+    learning_rate:
+      form: "power_law"
+      formula: "a_n = (n + 1)**(-0.75)"
+      a0: 1.0
+      exponent: -0.75
+  mbp:
+    method_note: >
+      Estimate (A,B) from drift, (C,D) from diffusion via least squares;
+      apply u = - (B + C D) / D^2 * x using estimates.
+    exploration_noise_initial: 1.0
+    exploration_noise_decay: 0.999
+    estimation_window: 1000
+
+# ==========================================
+# 5) DEEP RL BASELINES: ARCH + TRAINING
+# ==========================================
+DEEP_RL_ARCH_AND_TRAINING:
+  architecture_template:
+    type: "feedforward_mlp"
+    hidden_layers: 2
+    units_per_hidden: 32
+    hidden_activation: "ReLU"
+    output_activation: "linear"
+    notes: "Same backbone across SAC, PPO, DDPG; outputs differ by role."
+  instances:
+    SAC:
+      actor: {input_dim: 1, output_dim: 2, output_semantics: ["mu", "log_sigma"]}
+      critic1: {input_dim: 2, output_dim: 1, output_semantics: ["Q_value"]}
+      critic2: {input_dim: 2, output_dim: 1, output_semantics: ["Q_value"]}
+    PPO:
+      actor: {input_dim: 1, output_dim: 2, output_semantics: ["mu", "log_sigma"]}
+      critic: {input_dim: 1, output_dim: 1, output_semantics: ["V_value"]}
+    DDPG:
+      actor: {input_dim: 1, output_dim: 1, output_semantics: ["action_mu"]}
+      critic: {input_dim: 2, output_dim: 1, output_semantics: ["Q_value"]}
+  training_defaults:
+    optimizer: "Adam"
+    batch_size: 64
+    lr_actor: 0.0003
+    lr_critic: 0.0003
+    gradient_clip_norm: 0.5
+  sac:
+    entropy_temperature_alpha: 0.2
+    target_smoothing_tau: 0.005
+    replay_buffer_size: 100000
+    twin_critics: True
+  ppo:
+    clipping_epsilon: 0.2
+    gae_lambda: 0.95
+    discount_gamma: 0.99
+    optimization_epochs: 4
+  ddpg:
+    target_smoothing_tau: 0.005
+    replay_buffer_size: 100000
+    exploration_noise_std: 0.1
+    exploration_noise_decay: 0.9995
+
+# ==========================================
+# 6) GYM-LIKE ENV SPEC FOR DEEP RL BASELINES
+# ==========================================
+DEEP_RL_ENV_SPEC:
+  observation_space:
+    shape: [1]
+    dtype: "float32"
+    low: -inf
+    high: inf
+  action_space:
+    shape: [1]
+    dtype: "float32"
+    low: -10.0
+    high: 10.0
+  dynamics:
+    integrator: "Euler-Maruyama"
+    equation: "x_{k+1} = x_k + (A x_k + B u_k) * delta_t + (C x_k + D u_k) * sqrt(delta_t) * Z_k"
+    delta_t: 0.01
+  reward:
+    interim: "r_k = -0.5 * Q * x_k^2 * delta_t"
+    terminal: "r_T += -0.5 * H * x_T^2"
+    Q: 1.0
+    H: 1.0
+  episode_horizon: 100
+  initial_state: 0.0
+
+# ===================================
+# 7) EVALUATION / ANALYSIS SETTINGS
+# ===================================
+EVALUATION_SETTINGS:
+  reward_aggregation:
+    per_episode_definition: "R = sum_{k=0}^{K-1} (-0.5 * Q * x_k^2 * delta_t) + (-0.5 * H * x_K^2)"
+    notes: "Computed identically across algorithms to ensure fairness."
+  smoothing:
+    moving_average_window: 200
+    apply_to: ["mean", "median", "q25", "q75"]
+  significance_testing:
+    test: "Wilcoxon signed-rank"
+    alternative: "greater"
+    terminal_window: 500
+    report: "p_value_matrix (row vs column)"
+
+# ==========================================================
+# 8) INITIAL RAW DATA-STRUCTURE INPUTS (SCHEMA)
+# ==========================================================
+# NOTE: The following section defines the *schema* and generation process for
+# data that is created dynamically by the pipeline (e.g., by Task 2 and 3).
+# It is included here for completeness of the configuration specification,
+# but this data is not loaded from the file; it is generated by the code.
+INITIAL_RAW_DATA:
+  market_params_table:
+    purpose: "Defines the true, unknown-to-agent SDE parameters per run; fixed over all episodes."
+    row_count: 200
+    columns:
+      - {name: "run_id",   dtype: "int64",   constraints: "unique, non-null, range [0,199]"}
+      - {name: "base_seed",dtype: "int64",   constraints: "derived from master_seed; unique; in [0,2^31-1]"}
+      - {name: "A",        dtype: "float64", constraints: "Uniform(-0.05, 0.05)"}
+      - {name: "B",        dtype: "float64", constraints: "Uniform(0.05, 0.15)"}
+      - {name: "C",        dtype: "float64", constraints: "Uniform(0.1, 0.2)"}
+      - {name: "D",        dtype: "float64", constraints: "Uniform(0.1, 0.2)"}
+    generation:
+      distributions:
+        A: {type: "uniform", low: -0.05, high: 0.05}
+        B: {type: "uniform", low: 0.05,  high: 0.15}
+        C: {type: "uniform", low: 0.1,   high: 0.2}
+        D: {type: "uniform", low: 0.1,   high: 0.2}
+      rng_source: "EXPERIMENT_META.rng_policy.master_seed -> per-run base_seed (PCG64)"
+      note: "These values are stored for each run to guarantee identical market conditions across algorithms."
+  algorithm_seeds_table:
+    purpose: "Ensures independent stochastic streams per algorithm for a given run."
+    row_count: 200
+    columns:
+      - {name: "run_id",       dtype: "int64", constraints: "FK to market_params_table.run_id"}
+      - {name: "base_seed",    dtype: "int64", constraints: "copied for traceability"}
+      - {name: "seed_alm_rl",  dtype: "int64", constraints: "in [0, 2^31-1]"}
+      - {name: "seed_dcppi",   dtype: "int64", constraints: "in [0, 2^31-1]"}
+      - {name: "seed_acs",     dtype: "int64", constraints: "in [0, 2^31-1]"}
+      - {name: "seed_mbp",     dtype: "int64", constraints: "in [0, 2^31-1]"}
+      - {name: "seed_sac",     dtype: "int64", constraints: "in [0, 2^31-1]"}
+      - {name: "seed_ppo",     dtype: "int64", constraints: "in [0, 2^31-1]"}
+      - {name: "seed_ddpg",    dtype: "int64", constraints: "in [0, 2^31-1]"}
+    generation:
+      derivation: "hash/mix(base_seed, algorithm_name) under PCG64 to produce independent streams."
+      note: "This preserves identical market scenarios while isolating policy sampling and Brownian draws."
+  alm_rl_initial_table:
+    purpose: "Episode-0 initial conditions for the ALM-RL agent."
+    row_count: 200
+    columns:
+      - {name: "run_id",   dtype: "int64",   constraints: "FK to market_params_table.run_id"}
+      - {name: "x0",       dtype: "float64", constraints: "initial state; commonly 0.0"}
+      - {name: "theta1_0", dtype: "float64", constraints: "|theta1_0| <= 100; from Normal(0,1) then projected"}
+      - {name: "theta2_0", dtype: "float64", constraints: "|theta2_0| <= 100; from Normal(0,1) then projected"}
+      - {name: "phi1_0",   dtype: "float64", constraints: "|phi1_0| <= 100; from Normal(0,1) then projected"}
+      - {name: "phi2_0",   dtype: "float64", constraints: "fixed 1.0; in [0.01, 100]"}
+    initialization_policy:
+      x0: 0.0
+      theta_dist: "Normal(0,1) -> clip to [-100,100]"
+      phi1_dist: "Normal(0,1) -> clip to [-100,100]"
+      phi2_value: 1.0
+  baselines_initial_table:
+    purpose: "Episode-0 initial multipliers and ACS tolerance."
+    row_count: 200
+    columns:
+      - {name: "run_id",        dtype: "int64",   constraints: "FK to market_params_table.run_id"}
+      - {name: "m0_dcppi",      dtype: "float64", constraints: "from Normal(0,1)"}
+      - {name: "m0_acs",        dtype: "float64", constraints: "from Normal(0,1)"}
+      - {name: "tolerance_delta",dtype: "float64",constraints: "fixed 0.1 for all runs"}
+    initialization_policy:
+      m0_dcppi: "Normal(0,1)"
+      m0_acs: "Normal(0,1)"
+      tolerance_delta: 0.1
